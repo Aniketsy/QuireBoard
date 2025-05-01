@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resume Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Resume Analyzer</h1>
+        <form id="analyzeForm" enctype="multipart/form-data">
+            <div class="upload-section">
+                <h2>Job Description</h2>
+                <textarea name="job_description_text" placeholder="Paste job description here..."></textarea>
+                <p>OR</p>
+                <input type="file" name="job_description" accept=".pdf,.docx,.txt,.png,.jpg,.jpeg">
+            </div>
+            
+            <div class="upload-section">
+                <h2>Resume(s)</h2>
+                <input type="file" name="resume" multiple accept=".pdf,.docx,.txt,.png,.jpg,.jpeg">
+            </div>
+            
+            <button type="submit">Analyze</button>
+        </form>
+        
+        <div id="results" class="hidden">
+            <h2>Analysis Results</h2>
+            <div id="resultsList"></div>
+            <div id="improvedResume" class="hidden">
+                <h3>Improved Resume Suggestion</h3>
+                <pre id="improvedResumeContent"></pre>
+                <button onclick="downloadImprovedResume()">Download</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Add JavaScript to handle form submission and display results
+    </script>
+</body>
+</html>
