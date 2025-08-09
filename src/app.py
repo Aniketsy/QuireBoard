@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from werkzeug.utils import secure_filename
 import os
-from src.utils.parser import parse_text_from_file, save_resume_to_db, save_job_description_to_db, save_to_db
+from src.utils.parser import parse_file, save_resume_to_db, save_job_description_to_db, save_to_db
 from src.ai.analyzer import Analyzer
 from src.ai.generator import Generator
 from src.models.resume import Resume
@@ -23,7 +23,7 @@ def analyze():
             job_desc_text = request.form.get('job_description_text', '')
             job_desc_id = save_job_description_to_db({'text': job_desc_text})
         else:
-            job_desc_text = parse_text_from_file(job_desc)
+            job_desc_text = parse_file(job_desc)
             job_desc_id = save_job_description_to_db({'filename': job_desc.filename, 'text': job_desc_text})
 
 
@@ -34,7 +34,7 @@ def analyze():
         results = []
         analysis_db_records = []
         for resume_file in resumes:
-            resume_text = parse_text_from_file(resume_file)
+            resume_text = parse_file(resume_file)
             fit_status = analyzer.evaluate_fit(resume_text, job_desc_text)
             score = analyzer.calculate_fit_score(resume_text, job_desc_text)
             resume_data = Resume.from_text(resume_text).to_dict()
@@ -75,3 +75,6 @@ def analyze():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+
+if __name__ == "__main__":
+    app.run(host="127.0.0.1", port=5000, debug=True)

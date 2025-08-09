@@ -89,26 +89,65 @@ def parse_job_description(file_or_text):
 
 # ...existing code...
 
-from src.config.database import DatabaseConfig
+from src.config.database import SessionLocal
+from src.models.orm import ResumeORM, JobDescriptionORM, AnalysisORM
 from datetime import datetime
 
-def save_to_db(data: dict, collection_name: str) -> str:
-    """Save data to MongoDB"""
+def save_resume_to_db(resume_data: dict, user_id: str = None) -> int:
+    """Save resume data to PostgreSQL using SQLAlchemy ORM"""
+    db = SessionLocal()
     try:
-        db = DatabaseConfig.get_database()
-        collection = db[collection_name]
-        data['created_at'] = datetime.utcnow()
-        result = collection.insert_one(data)
-        return str(result.inserted_id)
-    except Exception as e:
-        print(f"Database error: {str(e)}")
-        raise
+        resume = ResumeORM(
+            name=resume_data.get('name', ''),
+            contact=resume_data.get('contact', ''),
+            education=resume_data.get('education', ''),
+            experience=resume_data.get('experience', ''),
+            skills=','.join(resume_data.get('skills', [])),
+            summary=resume_data.get('summary', ''),
+            achievements=resume_data.get('achievements', ''),
+            user_id=user_id,
+            filename=resume_data.get('filename', None)
+        )
+        db.add(resume)
+        db.commit()
+        db.refresh(resume)
+        return resume.id
+    finally:
+        db.close()
 
-def save_resume_to_db(resume_data: dict, user_id: str = None) -> str:
-    """Save resume data to MongoDB"""
-    resume_data['user_id'] = user_id
-    return save_to_db(resume_data, 'resumes')
+def save_job_description_to_db(job_data: dict) -> int:
+    """Save job description to PostgreSQL using SQLAlchemy ORM"""
+    db = SessionLocal()
+    try:
+        job = JobDescriptionORM(
+            text=job_data.get('text', ''),
+            filename=job_data.get('filename', None)
+        )
+        db.add(job)
+        db.commit()
+        db.refresh(job)
+        return job.id
+    finally:
+        db.close()
 
-def save_job_description_to_db(job_data: dict) -> str:
-    """Save job description to MongoDB"""
-    return save_to_db(job_data, 'job_descriptions')
+def save_to_db(data: dict, collection_name: str) -> int:
+    """Save analysis or other data to PostgreSQL using SQLAlchemy ORM"""
+    db = SessionLocal()
+    try:
+        if collection_name == 'analyses':
+            analysis = AnalysisORM(
+                resume_id=data.get('resume_id'),
+                job_description_id=data.get('job_description_id'),
+                fit_status=data.get('fit_status'),
+                score=data.get('score'),
+                improved_resume=data.get('improved_resume', None),
+                created_at=datetime.utcnow()
+            )
+            db.add(analysis)
+            db.commit()
+            db.refresh(analysis)
+            return analysis.id
+        else:
+            raise ValueError(f"Unknown collection_name: {collection_name}")
+    finally:
+        db.close()
